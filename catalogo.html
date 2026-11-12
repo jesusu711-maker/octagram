@@ -1,17 +1,33 @@
-<!doctype html>
-<html lang="es">
-<head>
- <meta charset="utf-8">
- <title>Mi sitio</title>
- <link rel="stylesheet" href="estilo.css">
-</head>
-<body>
- <nav>
- <a href="index.html">Inicio</a> ·
- <a href="catalogo.html">Catálogo</a> ·
- <a href="acerca.html">Acerca</a>
- </nav>
- <h1>catalogo</h1>
- <p>Aqui va un catalogo.</p>
-</body>
-</html>
+<script>
+    // Tu Project URL armada con el Project ID
+    const SUPABASE_URL = 'https://eftzdzrexcfesyzebauv.supabase.co';
+    
+    // Tu Publishable key que acabas de copiar
+    const SUPABASE_ANON_KEY = 'sb_publishable_Nv-hQ0b1Uu1ObEPhDJos0w_CLbM1...'; // (pega la tuya completa)
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function cargarJuegos() {
+      const { data, error } = await supabaseClient
+        .from('juegos')
+        .select('*');
+
+      const lista = document.getElementById('lista-juegos');
+
+      if (error) {
+        lista.innerHTML = `<li style="color:red;">Error al cargar: ${error.message}</li>`;
+        return;
+      }
+
+      lista.innerHTML = ''; 
+      
+      data.forEach(juego => {
+        const li = document.createElement('li');
+        li.textContent = `${juego.titulo} (${juego.anio}) — Género: ${juego.genero} | Rating: ${juego.rating}`;
+        lista.appendChild(li);
+      });
+    }
+
+    cargarJuegos();
+  </script>
+
