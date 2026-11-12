@@ -1,17 +1,105 @@
 <!doctype html>
 <html lang="es">
 <head>
- <meta charset="utf-8">
- <title>Mi sitio</title>
- <link rel="stylesheet" href="estilo.css">
+  <meta charset="utf-8">
+  <title>Mi sitio - Autenticación</title>
+  <link rel="stylesheet" href="estilo.css">
+  <!-- Importar la librería de Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
- <nav>
- <a href="index.html">Inicio</a> ·
- <a href="catalogo.html">Catálogo</a> ·
- <a href="acerca.html">Acerca</a>
- </nav>
- <h1>Mi primer sitio web</h1>
- <p>Hola, SEBAS. Esta es mi página de inicio.</p>
+  <nav>
+    <a href="index.html">Inicio</a> ·
+    <a href="catalogo.html">Catálogo</a> ·
+    <a href="acerca.html">Acerca</a>
+  </nav>
+
+  <h1>Mi primer sitio web</h1>
+  <p>Hola, SEBAS. Esta es mi página de inicio.</p>
+
+  <!-- SECCIÓN DE LOGIN Y REGISTRO -->
+  <div id="auth-section">
+    <h3>Iniciar sesión / Crear cuenta</h3>
+    <input type="email" id="email" placeholder="Correo electrónico"><br><br>
+    <input type="password" id="pass" placeholder="Contraseña"><br><br>
+    <button onclick="entrar()">Iniciar sesión</button>
+    <button onclick="registrar()">Crear cuenta</button>
+    <p id="ml" style="font-weight: bold;"></p>
+  </div>
+
+  <!-- SECCIÓN DE LA APLICACIÓN (Protegida, oculta por defecto) -->
+  <div id="app-section" style="display: none;">
+    <h2>Panel protegido</h2>
+    <p>Bienvenido, sesión activa de: <span id="user-email" style="color: green; font-weight: bold;"></span></p>
+    <button onclick="salir()">Cerrar sesión</button>
+  </div>
+
+  <script>
+    // Tus credenciales de Supabase
+    const SUPABASE_URL = 'https://eftzdzrexcfesyzebauv.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_Nv-hQ0b1Uu1ObEPhDJos0w_CLbM1...'; // Tu llave publishable completa
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Funciones auxiliares para leer inputs y mostrar mensajes
+    function val(id) {
+      return document.getElementById(id).value;
+    }
+
+    function msg(id, texto, exito) {
+      const el = document.getElementById(id);
+      el.style.color = exito ? 'green' : 'red';
+      el.innerText = texto;
+    }
+
+    function mostrarApp() {
+      document.getElementById('auth-section').style.display = 'none';
+      document.getElementById('app-section').style.display = 'block';
+      
+      // Muestra el correo del usuario conectado
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user) {
+          document.getElementById('user-email').innerText = user.email;
+        }
+      });
+    }
+
+    function mostrarLogin() {
+      document.getElementById('auth-section').style.display = 'block';
+      document.getElementById('app-section').style.display = 'none';
+      document.getElementById('email').value = '';
+      document.getElementById('pass').value = '';
+      document.getElementById('ml').innerText = '';
+    }
+
+    // 3. Funciones de Registro e Inicio de sesión (Supabase Auth)
+    async function registrar() {
+      const { error } = await supabase.auth.signUp({ email: val('email'), password: val('pass') });
+      if (error) return msg('ml', 'Error: ' + error.message, false);
+      msg('ml', 'Cuenta creada. Ya puedes iniciar sesión.', true);
+    }
+
+    async function entrar() {
+      const { error } = await supabase.auth.signInWithPassword({ email: val('email'), password: val('pass') });
+      if (error) return msg('ml', 'Credenciales incorrectas', false);
+      mostrarApp();
+    }
+
+    // 4. Proteger con sesión al cargar la página[cite: 16]
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        mostrarApp();
+      } else {
+        mostrarLogin();
+      }
+    })();
+
+    // 5. Función para cerrar sesión[cite: 17]
+    async function salir() {
+      await supabase.auth.signOut();
+      mostrarLogin();
+    }
+  </script>
 </body>
 </html>
